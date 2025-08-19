@@ -1,0 +1,53 @@
+/* Azure DevOps PR Statistics Extension Styles */
+
+.ado-pr-stats {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background-color: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Helvetica, Ubuntu, Arial, sans-serif;
+  white-space: nowrap;
+}
+
+.ado-pr-stats:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .ado-pr-stats {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e6e6e6;
+  }
+  
+  .ado-pr-stats:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Specific styling for body-m text-ellipsis elements */
+.body-m.text-ellipsis .ado-pr-stats {
+  margin-left: 8px;
+  font-size: inherit;
+  vertical-align: baseline;
+  border: none;
+  background-color: transparent;
+  padding: 0;
+}
+
+.body-m.text-ellipsis .ado-pr-stats:hover {
+  background-color: transparent;
+}
+
+/* Azure DevOps specific theme adjustments */
+.repos-pr-section-card .ado-pr-stats {
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.bolt-header-title .ado-pr-stats {
+  margin-left: 12px;
+  font-size: 13px;
+}
