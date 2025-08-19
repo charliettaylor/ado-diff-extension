@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "Azure DevOps PR Statistics",
+  "name": "Azure DevOps Statistics",
   "version": "1.0.0",
-  "description": "Counts total additions and deletions in Azure DevOps Pull Requests",
+  "description": "Counts total additions and deletions in Azure DevOps Pull Requests and Commits",
   
   "permissions": [
     "*://dev.azure.com/*",
@@ -15,7 +15,10 @@
       "matches": [
         "*://dev.azure.com/*/pullrequest/*",
         "*://*.visualstudio.com/*/pullrequest/*",
-        "*://*.azure.com/*/pullrequest/*"
+        "*://*.azure.com/*/pullrequest/*",
+        "*://dev.azure.com/*/commit/*",
+        "*://*.visualstudio.com/*/commit/*",
+        "*://*.azure.com/*/commit/*"
       ],
       "js": ["content-script.js"],
       "css": ["styles.css"],

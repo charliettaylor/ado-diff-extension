@@ -5,13 +5,12 @@ class AzureDevOpsPRStats {
     this.observer = null;
     this.statsElement = null;
     this.lastUpdate = 0;
-    this.debounceDelay = 500; // 500ms debounce
-    
+    this.delay = 500; // 500ms debounce
+
     this.init();
   }
 
   init() {
-    // Wait for page to load completely
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => this.start());
     } else {
@@ -20,7 +19,6 @@ class AzureDevOpsPRStats {
   }
 
   start() {
-    // Initial calculation
     setTimeout(() => {
       this.calculateStats();
       this.injectStats();
@@ -30,16 +28,14 @@ class AzureDevOpsPRStats {
 
   calculateStats() {
     const now = Date.now();
-    if (now - this.lastUpdate < this.debounceDelay) {
+    if (now - this.lastUpdate < this.delay) {
       return;
     }
     this.lastUpdate = now;
 
-    // Reset counters
     this.additionsTotal = 0;
     this.deletionsTotal = 0;
 
-    // Find all addition spans
     const additionSpans = document.querySelectorAll('span.repos-compare-added-lines');
     additionSpans.forEach(span => {
       const text = span.textContent.trim();
@@ -49,7 +45,6 @@ class AzureDevOpsPRStats {
       }
     });
 
-    // Find all deletion spans
     const deletionSpans = document.querySelectorAll('span.repos-compare-removed-lines');
     deletionSpans.forEach(span => {
       const text = span.textContent.trim();
@@ -64,43 +59,28 @@ class AzureDevOpsPRStats {
   }
 
   extractNumber(text) {
-    // Extract number from text like "+123" or "-456" or "123"
+    // match +/- followed by one or more digits
     const match = text.match(/[+-]?(\d+)/);
     return match ? parseInt(match[1], 10) : 0;
   }
 
   findFileCountElement() {
-    // Look specifically for elements with the "body-m text-ellipsis" classes
     const targetElements = document.querySelectorAll('.body-m.text-ellipsis');
-    
+
     for (const element of targetElements) {
-      // Check if this element contains file count text
-      const text = element.textContent;
-      if (text && (
-        text.match(/\d+\s+files?\s+changed/i) ||
-        text.match(/\d+\s+files?\s+modified/i) ||
-        text.match(/files?\s+\(\d+\)/i) ||
-        text.includes('file') ||
-        text.includes('File')
-      )) {
+      if (element.tagName === 'SPAN') {
         return element;
       }
     }
 
-    // Fallback: look for any .body-m.text-ellipsis element (even without file text)
-    const fallbackElement = document.querySelector('.body-m.text-ellipsis');
-    if (fallbackElement) {
-      console.log('Using fallback .body-m.text-ellipsis element');
-      return fallbackElement;
-    }
-
+    // if it's not there, we have an issue. Maybe determine a fallback later?
     console.log('Could not find .body-m.text-ellipsis element');
     return null;
   }
 
   injectStats() {
     const targetElement = this.findFileCountElement();
-    
+
     if (!targetElement) {
       console.log('Could not find .body-m.text-ellipsis element to inject stats');
       return;
@@ -117,15 +97,15 @@ class AzureDevOpsPRStats {
     this.statsElement.className = 'ado-pr-stats';
     this.statsElement.style.marginLeft = '8px';
     this.statsElement.style.color = '#666';
+    this.statsElement.style.fontFamily = 'inherit';
     this.statsElement.style.fontSize = 'inherit';
     this.statsElement.style.fontWeight = 'normal';
     this.statsElement.style.whiteSpace = 'nowrap';
 
     this.updateStatsDisplay();
 
-    // Append to the target element
     targetElement.appendChild(this.statsElement);
-    
+
     console.log('Successfully injected PR stats into .body-m.text-ellipsis element');
   }
 
@@ -134,61 +114,62 @@ class AzureDevOpsPRStats {
 
     const additionsText = this.additionsTotal > 0 ? `+${this.additionsTotal}` : '0';
     const deletionsText = this.deletionsTotal > 0 ? `-${this.deletionsTotal}` : '0';
-    
+
     this.statsElement.innerHTML = `
-      <span style="color: #28a745; font-weight: 500;">${additionsText}</span>
+      <span style="color: #28a745;">${additionsText}</span>
       <span style="margin: 0 4px;">/</span>
-      <span style="color: #dc3545; font-weight: 500;">${deletionsText}</span>
+      <span style="color: #dc3545;">${deletionsText}</span>
     `;
-    
+
     this.statsElement.title = `Total additions: ${this.additionsTotal}, Total deletions: ${this.deletionsTotal}`;
   }
 
   setupObserver() {
-    // Disconnect existing observer
     if (this.observer) {
       this.observer.disconnect();
     }
 
-    // Create new observer to watch for dynamic content changes
     this.observer = new MutationObserver((mutations) => {
       let shouldRecalculate = false;
 
+      // Check if nodes were added/removed that might contain our target elements
       mutations.forEach((mutation) => {
-        // Check if nodes were added/removed that might contain our target elements
+        if (shouldRecalculate) {
+          return;
+        }
+
         if (mutation.type === 'childList') {
           const addedNodes = Array.from(mutation.addedNodes);
           const removedNodes = Array.from(mutation.removedNodes);
-          
+
           [...addedNodes, ...removedNodes].forEach(node => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              // Check if the node or its descendants contain our target classes
-              if (node.classList?.contains('repos-compare-added-lines') ||
-                  node.classList?.contains('repos-compare-removed-lines') ||
-                  node.querySelector?.('.repos-compare-added-lines, .repos-compare-removed-lines')) {
-                shouldRecalculate = true;
-              }
+            if (node.nodeType === Node.ELEMENT_NODE && this.checkForChanges(node)) {
+              shouldRecalculate = true;
             }
           });
         }
       });
 
       if (shouldRecalculate) {
-        // Debounce the recalculation
         setTimeout(() => {
           this.calculateStats();
           if (!this.statsElement || !document.contains(this.statsElement)) {
             this.injectStats();
           }
-        }, this.debounceDelay);
+        }, this.delay);
       }
     });
 
-    // Start observing
     this.observer.observe(document.body, {
       childList: true,
       subtree: true
     });
+  }
+
+  checkForChanges(node) {
+    return node.classList?.contains('repos-compare-added-lines') ||
+      node.classList?.contains('repos-compare-removed-lines') ||
+      node.querySelector?.('.repos-compare-added-lines, .repos-compare-removed-lines');
   }
 
   destroy() {
@@ -210,7 +191,7 @@ function initializeExtension() {
   if (prStats) {
     prStats.destroy();
   }
-  
+
   // Check if we're on a PR page
   if (window.location.pathname.includes('pullrequest')) {
     prStats = new AzureDevOpsPRStats();
