@@ -1,15 +1,14 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "Azure DevOps Statistics",
   "version": "1.0.0",
   "description": "Counts total additions and deletions in Azure DevOps Pull Requests and Commits",
-  
-  "permissions": [
+  "permissions": [],
+  "host_permissions": [
     "*://dev.azure.com/*",
     "*://*.visualstudio.com/*",
     "*://*.azure.com/*"
   ],
-  
   "content_scripts": [
     {
       "matches": [
@@ -25,13 +24,21 @@
       "run_at": "document_end"
     }
   ],
-  
   "icons": {
     "48": "icons/icon-48.svg",
     "96": "icons/icon-96.svg"
   },
-  
   "web_accessible_resources": [
-    "styles.css"
+    {
+      "resources": ["styles.css"],
+      "matches": [
+        "*://dev.azure.com/*/pullrequest/*",
+        "*://*.visualstudio.com/*/pullrequest/*",
+        "*://*.azure.com/*/pullrequest/*",
+        "*://dev.azure.com/*/commit/*",
+        "*://*.visualstudio.com/*/commit/*",
+        "*://*.azure.com/*/commit/*"
+      ]
+    }
   ]
 }

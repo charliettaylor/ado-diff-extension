@@ -112,14 +112,29 @@ class AzureDevOpsPRStats {
   updateStatsDisplay() {
     if (!this.statsElement) return;
 
+    // Remove all children
+    while (this.statsElement.firstChild) {
+      this.statsElement.removeChild(this.statsElement.firstChild);
+    }
+
     const additionsText = this.additionsTotal > 0 ? `+${this.additionsTotal}` : '0';
     const deletionsText = this.deletionsTotal > 0 ? `-${this.deletionsTotal}` : '0';
 
-    this.statsElement.innerHTML = `
-      <span style="color: #28a745;">${additionsText}</span>
-      <span style="margin: 0 4px;">/</span>
-      <span style="color: #dc3545;">${deletionsText}</span>
-    `;
+    const additionsSpan = document.createElement('span');
+    additionsSpan.style.color = '#28a745';
+    additionsSpan.textContent = additionsText;
+
+    const slashSpan = document.createElement('span');
+    slashSpan.style.margin = '0 4px';
+    slashSpan.textContent = '/';
+
+    const deletionsSpan = document.createElement('span');
+    deletionsSpan.style.color = '#dc3545';
+    deletionsSpan.textContent = deletionsText;
+
+    this.statsElement.appendChild(additionsSpan);
+    this.statsElement.appendChild(slashSpan);
+    this.statsElement.appendChild(deletionsSpan);
 
     this.statsElement.title = `Total additions: ${this.additionsTotal}, Total deletions: ${this.deletionsTotal}`;
   }
@@ -193,7 +208,7 @@ function initializeExtension() {
   }
 
   // Check if we're on a PR page
-  if (window.location.pathname.includes('pullrequest')) {
+  if (window.location.pathname.includes('pullrequest') || window.location.pathname.includes('commit')) {
     prStats = new AzureDevOpsPRStats();
   }
 }
